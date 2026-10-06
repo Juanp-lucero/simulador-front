@@ -56,7 +56,9 @@ Comprueba registro, login, creación de aeronave, creación/edición de ruta, ma
 
 `E2E_FRONTEND_URL` permite cambiar el origen del frontend. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` y `PLAYWRIGHT_BROWSER_LIBS` son opciones para entornos Nix; normalmente no se necesitan. `PLAYWRIGHT_LOW_MEMORY=1` reduce procesos de Chromium para pruebas locales. También existe `npm run test:e2e:runner`, que usa el runner estándar de Playwright y puede iniciar `ng serve`.
 
-El CI de GitHub ejecuta pruebas unitarias, build de producción y el flujo de navegador con PostgreSQL temporal y el backend público separado. La prueba completa local se verificó una vez; las repeticiones en el entorno Nix de desarrollo tuvieron timeouts intermitentes. Consulta el resultado del CI antes de considerar resuelta la repetibilidad.
+`docs/ci/verify.yml` contiene una plantilla para ejecutar pruebas unitarias, build de producción y el flujo de navegador con PostgreSQL temporal y el backend público separado. **No está activada**: GitHub permitió publicar los archivos del proyecto, pero rechazó publicar el workflow en `.github/workflows/`. Para activarla, cópiala a `.github/workflows/verify.yml` con una cuenta/conexión autorizada para modificar workflows.
+
+La prueba completa local se verificó una vez; las repeticiones en el entorno Nix de desarrollo tuvieron timeouts intermitentes. La repetibilidad del navegador y la ejecución de CI siguen pendientes.
 
 ## Límites actuales
 

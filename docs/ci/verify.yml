@@ -1,0 +1,79 @@
+name: Verify frontend and API integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci_only
+          POSTGRES_DB: aeromind_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d aeromind_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://ci:ci_only@127.0.0.1:5432/aeromind_ci
+      SECRET_KEY: ci-integration-test-only-key-never-for-production
+      CORS_ORIGINS: http://127.0.0.1:4200,http://localhost:4200
+      NG_BUILD_MAX_WORKERS: "1"
+      E2E_ALLOW_DATA_CREATION: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Juanp-lucero/simulador-back
+          ref: a494185f44ec0c0ea61f8eca8f55627c3b7f2e5c
+          path: e2e-backend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - run: pip install -r e2e-backend/requirements.txt
+      - name: Verify backend and PostgreSQL
+        working-directory: e2e-backend
+        env:
+          RUN_POSTGRES_TESTS: "1"
+        run: |
+          alembic upgrade head
+          alembic check
+          python -m pytest -q
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Start API and built frontend
+        run: |
+          (cd e2e-backend && uvicorn app.main:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/backend.log" 2>&1) &
+          python -m http.server 4200 --bind 127.0.0.1 --directory dist/aeromind-front/browser > "$RUNNER_TEMP/frontend.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health && curl -fsS http://127.0.0.1:4200/config.json; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-evidence
+          path: |
+            test-results/
+            ${{ runner.temp }}/backend.log
+            ${{ runner.temp }}/frontend.log
+          if-no-files-found: ignore
