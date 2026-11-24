@@ -2,6 +2,17 @@
 
 Angular 21, TypeScript, Tailwind CSS, Leaflet y Chart.js. Repositorio independiente del backend FastAPI (`Juanp-lucero/simulador-back`).
 
+## Despliegue
+
+Desplegado en Vercel:
+
+| | URL | Repositorio |
+|---|---|---|
+| Aplicación (frontend) | https://simulador-front.vercel.app | [Juanp-lucero/simulador-front](https://github.com/Juanp-lucero/simulador-front) |
+| API (backend) | https://simulador-back.vercel.app | [Juanp-lucero/simulador-back](https://github.com/Juanp-lucero/simulador-back) |
+| Estado de la API | https://simulador-back.vercel.app/health | |
+| Documentación de la API | https://simulador-back.vercel.app/docs | |
+
 ## Funciones implementadas
 
 - Registro/login contra `/auth/register`, `/auth/login` y `/auth/me`.
