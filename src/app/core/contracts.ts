@@ -25,3 +25,18 @@ export interface SimulationRunSummary {
 /** Saved scenario with its deterministic result and optional AI explanation. */
 export interface SimulationRun extends SimulationRunSummary { result: Snapshot; explanation: string | null; }
 export interface SimulationRunCreate { name: string; route_ids: number[]; elapsed_s: number; }
+
+/** Metrics computed by the backend for one route plan. */
+export interface RouteInsights {
+  route_id: number; route_name: string; aircraft_registration: string | null;
+  waypoint_count: number; leg_count: number; total_distance_km: number; estimated_duration_min: number;
+  min_altitude_m: number; max_altitude_m: number; min_speed_mps: number; max_speed_mps: number;
+  aircraft_ceiling_m: number | null; ceiling_margin_m: number | null; max_vertical_rate_mps: number;
+  warnings: string[];
+}
+/** Route review written by Groq (`ai`) or by the deterministic rules (`rules`). */
+export interface RouteReview {
+  source: 'ai' | 'rules'; model: string | null; summary: string;
+  strengths: string[]; risks: string[]; suggestions: string[];
+  insights: RouteInsights; disclaimer: string;
+}
