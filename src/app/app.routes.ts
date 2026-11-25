@@ -5,5 +5,6 @@ export const routes: Routes = [
   { path: 'aircraft', loadComponent: () => import('./pages/aircraft.page').then(module => module.AircraftPage) },
   { path: 'routes', loadComponent: () => import('./pages/routes.page').then(module => module.RoutesPage) },
   { path: 'simulation', loadComponent: () => import('./pages/simulation.page').then(module => module.SimulationPage) },
+  { path: 'history', loadComponent: () => import('./pages/history.page').then(module => module.HistoryPage) },
   { path: '**', redirectTo: '' },
 ];

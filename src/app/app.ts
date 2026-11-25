@@ -17,6 +17,7 @@ import { AuthPage } from './pages/auth.page';
             <a routerLink="/aircraft" routerLinkActive="active"><span>✈</span> Aeronaves</a>
             <a routerLink="/routes" routerLinkActive="active"><span>⌁</span> Planes de ruta</a>
             <a routerLink="/simulation" routerLinkActive="active"><span>◎</span> Simulador</a>
+            <a routerLink="/history" routerLinkActive="active"><span>◷</span> Historial</a>
           </nav>
           <div class="sidebar-note"><span class="status-dot"></span> Motor determinístico<small>Simulación geométrica académica.<br>No usar para operaciones reales.</small></div>
           <div class="account"><span class="avatar">{{ user.username.slice(0, 2).toUpperCase() }}</span><div>{{ user.username }}<small>{{ user.email }}</small></div><button class="icon-button" aria-label="Cerrar sesión" title="Cerrar sesión" (click)="auth.logout()">↪</button></div>
