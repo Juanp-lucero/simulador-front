@@ -3,9 +3,10 @@ import { DecimalPipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { Aircraft, FlightRoute, RouteInsights, RouteWrite, WaypointWrite } from '../core/contracts';
+import { Aircraft, FlightRoute, RouteInsights, RouteReview, RouteWrite, WaypointWrite } from '../core/contracts';
 import { formatKm } from '../core/format';
-import { errorMessage } from '../core/errors';
+import { aiErrorMessage, errorMessage } from '../core/errors';
+import { AiText } from '../shared/ai-text';
 
 function waypointForm(point?: WaypointWrite) {
   return new FormGroup({
@@ -17,7 +18,7 @@ function waypointForm(point?: WaypointWrite) {
 }
 
 @Component({
-  selector: 'app-routes', imports: [ReactiveFormsModule, DecimalPipe],
+  selector: 'app-routes', imports: [ReactiveFormsModule, DecimalPipe, AiText],
   template: `
     <section class="page">
       <div class="page-heading"><div><div class="eyebrow">PLANIFICACIÓN</div><h1>Planes de ruta</h1><p>Waypoints ordenados para un recorrido sobre la esfera terrestre.</p></div><span class="tag">GRADOS · METROS · m/s</span></div>
@@ -55,6 +56,18 @@ function waypointForm(point?: WaypointWrite) {
             <div class="warning-list" role="list">@for (warning of data.warnings; track warning) { <p role="listitem">⚠ {{ warning }}</p> }</div>
           } @else { <div class="success-box">Sin alertas en los chequeos automáticos.</div> }
         </article>
+        <article class="panel ai-panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">REVISIÓN DEL PLAN</div><h2>¿Es coherente este plan?</h2></div><button class="button primary" [disabled]="reviewing()" (click)="review(data.route_id)">{{ reviewResult() ? 'Revisar de nuevo' : 'Revisar con IA' }}</button></div>
+          @if (reviewing()) { <p class="loading-line">Revisando altitudes, velocidades y tramos…</p> }
+          @else if (reviewError()) { <div class="error-box" role="alert">{{ reviewError() }}</div> }
+          @else if (reviewResult(); as result) {
+            <p><span class="source-badge" [class.ai]="result.source === 'ai'" [class.rules]="result.source === 'rules'">{{ result.source === 'ai' ? 'IA · ' + result.model : 'REGLAS' }}</span></p>
+            <app-ai-text [text]="result.summary" />
+            @if (result.strengths.length) { <h3 class="review-title">Fortalezas</h3>@for (item of result.strengths; track item) { <p class="ai-bullet">{{ item }}</p> } }
+            @if (result.risks.length) { <h3 class="review-title">Riesgos</h3>@for (item of result.risks; track item) { <p class="ai-bullet">{{ item }}</p> } }
+            @if (result.suggestions.length) { <h3 class="review-title">Sugerencias</h3>@for (item of result.suggestions; track item) { <p class="ai-bullet">{{ item }}</p> } }
+            <p class="ai-meta">{{ result.disclaimer }}</p>
+          } @else { <p class="muted">La IA lee las métricas calculadas y señala fortalezas, riesgos y mejoras del plan.</p> }
+        </article>
       }
     </section>
   `
@@ -67,6 +80,7 @@ export class RoutesPage implements OnInit {
   readonly error = signal(''); readonly message = signal('');
   readonly insights = signal<RouteInsights | null>(null); readonly insightsLoading = signal(false);
   readonly km = formatKm;
+  readonly reviewResult = signal<RouteReview | null>(null); readonly reviewing = signal(false); readonly reviewError = signal('');
   readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]),
     aircraft_id: this.fb.control<number | null>(null),
@@ -119,4 +133,11 @@ export class RoutesPage implements OnInit {
     finally { this.insightsLoading.set(false); }
   }
   closeInsights() { this.insights.set(null); }
+
+  async review(routeId: number) {
+    this.reviewing.set(true); this.reviewError.set('');
+    try { this.reviewResult.set(await firstValueFrom(this.api.reviewRoute(routeId))); }
+    catch (error) { this.reviewError.set(aiErrorMessage(error)); }
+    finally { this.reviewing.set(false); }
+  }
 }
