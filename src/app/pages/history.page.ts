@@ -3,13 +3,14 @@ import { DecimalPipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { SimulationRun, SimulationRunSummary } from '../core/contracts';
-import { errorMessage } from '../core/errors';
+import { aiErrorMessage, errorMessage } from '../core/errors';
+import { AiText } from '../shared/ai-text';
 import { formatDate, formatDuration } from '../core/format';
 
 export const RUNS_PAGE_SIZE = 10;
 
 @Component({
-  selector: 'app-history', imports: [DecimalPipe],
+  selector: 'app-history', imports: [DecimalPipe, AiText],
   template: `
     <section class="page">
       <div class="page-heading"><div><div class="eyebrow">REGISTRO</div><h1>Historial de simulaciones</h1><p>Instantes guardados desde el simulador, con su resultado calculado.</p></div><span class="tag">{{ runs().length }} EN ESTA PÁGINA</span></div>
@@ -33,6 +34,12 @@ export const RUNS_PAGE_SIZE = 10;
           @for (state of run.result.states; track state.aircraft_id) {
             <div class="telemetry-row"><div><strong>{{ state.registration }}</strong><small>{{ state.route_name }}</small></div><span>{{ state.altitude_m | number:'1.0-0' }} m<small>{{ state.speed_mps | number:'1.0-1' }} m/s</small></span><span>{{ state.progress * 100 | number:'1.0-0' }}%<small>{{ state.completed ? 'Completada' : 'WP ' + state.next_waypoint }}</small></span></div>
           }
+          <div class="ai-panel panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">ASISTENCIA IA</div><h2>Explicación</h2></div><button class="button primary" [disabled]="explaining()" (click)="explain(run)">{{ run.explanation ? 'Regenerar' : 'Explicar con IA' }}</button></div>
+            @if (explaining()) { <p class="loading-line">La IA está revisando esta simulación…</p> }
+            @else if (aiError()) { <div class="error-box" role="alert">{{ aiError() }}</div> }
+            @else if (run.explanation) { <app-ai-text [text]="run.explanation" /><p class="ai-meta">La explicación queda guardada con la simulación.</p> }
+            @else { <p class="muted">Esta simulación aún no tiene explicación.</p> }
+          </div>
         } @else { <div class="empty-state"><span>◎</span><h3>Selecciona una simulación</h3><p>Verás la telemetría guardada y su explicación con IA.</p></div> }
       </article>
       </div>
@@ -48,6 +55,8 @@ export class HistoryPage implements OnInit {
   readonly error = signal('');
   readonly selected = signal<SimulationRun | null>(null);
   readonly detailLoading = signal(false);
+  readonly explaining = signal(false);
+  readonly aiError = signal('');
   readonly duration = formatDuration;
   readonly date = formatDate;
 
@@ -63,9 +72,19 @@ export class HistoryPage implements OnInit {
   }
 
   async open(id: number) {
-    this.detailLoading.set(true); this.error.set('');
+    this.detailLoading.set(true); this.error.set(''); this.aiError.set('');
     try { this.selected.set(await firstValueFrom(this.api.run(id))); }
     catch (error) { this.error.set(errorMessage(error)); }
     finally { this.detailLoading.set(false); }
+  }
+
+  async explain(run: SimulationRun) {
+    this.explaining.set(true); this.aiError.set('');
+    try {
+      const answer = await firstValueFrom(this.api.explainRun(run.id));
+      this.selected.set({ ...run, explanation: answer.explanation, has_explanation: true });
+      this.runs.update(runs => runs.map(item => item.id === run.id ? { ...item, has_explanation: true } : item));
+    } catch (error) { this.aiError.set(aiErrorMessage(error)); }
+    finally { this.explaining.set(false); }
   }
 }
