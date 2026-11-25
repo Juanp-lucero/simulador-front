@@ -1,7 +1,7 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
-  AiStatus, Aircraft, AircraftWrite, FlightRoute, RouteInsights, RouteReview, RouteWrite, SimulationRun, SimulationRunCreate, SimulationExplanation, SimulationRunSummary, Snapshot,
+  AiStatus, Aircraft, AircraftWrite, DashboardStats, HealthDetails, FlightRoute, RouteInsights, RouteReview, RouteWrite, SimulationRun, SimulationRunCreate, SimulationExplanation, SimulationRunSummary, Snapshot,
 } from './contracts';
 
 export const API_URL = new InjectionToken<string>('API_URL');
@@ -42,4 +42,8 @@ export class ApiService {
     return this.http.post<SimulationExplanation>(`${this.base}/ai/simulation/explain`, { route_ids, elapsed_s });
   }
   explainRun(id: number) { return this.http.post<SimulationExplanation>(`${this.base}/ai/simulation/runs/${id}/explain`, {}); }
+
+  // Dashboard and service status
+  stats() { return this.http.get<DashboardStats>(`${this.base}/stats`); }
+  healthDetails() { return this.http.get<HealthDetails>(`${this.base}/health/details`); }
 }
