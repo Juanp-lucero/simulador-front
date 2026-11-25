@@ -2,13 +2,14 @@ import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular
 import { DecimalPipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { FlightRoute, Snapshot } from '../core/contracts';
-import { errorMessage } from '../core/errors';
+import { FlightRoute, SimulationExplanation, Snapshot } from '../core/contracts';
+import { aiErrorMessage, errorMessage } from '../core/errors';
+import { AiText } from '../shared/ai-text';
 import { FlightMap } from '../shared/flight-map';
 import { AltitudeChart } from '../shared/altitude-chart';
 
 @Component({
-  selector: 'app-simulation', imports: [FlightMap, AltitudeChart, DecimalPipe],
+  selector: 'app-simulation', imports: [FlightMap, AltitudeChart, DecimalPipe, AiText],
   template: `
     <section class="page">
       <div class="page-heading"><div><div class="eyebrow">REPRODUCCIÓN DETERMINÍSTICA</div><h1>Simulador</h1><p>Selecciona rutas y explora sus posiciones calculadas por la API.</p></div><span class="tag">PREVIEW HTTP · SIN IA</span></div>
@@ -30,6 +31,12 @@ import { AltitudeChart } from '../shared/altitude-chart';
             <div class="telemetry-grid"><article class="panel"><div class="panel-heading"><h2>Telemetría</h2><span class="tag">SI</span></div>
               @for (state of current.states; track state.aircraft_id) { <div class="telemetry-row"><div><strong>{{ state.registration }}</strong><small>{{ state.route_name }}</small></div><span>{{ state.altitude_m | number:'1.0-0' }} m<small>{{ state.speed_mps | number:'1.0-1' }} m/s</small></span><span>{{ state.progress * 100 | number:'1.0-0' }}%<small>{{ state.completed ? 'Completada' : 'WP ' + state.next_waypoint }}</small></span></div> }
             </article><article class="panel"><div class="panel-heading"><h2>Altitudes calculadas</h2><span class="tag">METROS</span></div><app-altitude-chart [states]="current.states" /></article></div>
+            <article class="panel ai-panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">ASISTENCIA IA</div><h2>Explicación del escenario</h2></div><button class="button primary" [disabled]="explaining() || busy()" (click)="explain()">{{ explanation() ? 'Volver a explicar' : 'Explicar con IA' }}</button></div>
+              @if (explaining()) { <p class="loading-line">La IA está analizando el instante {{ elapsed() | number:'1.0-0' }} s…</p> }
+              @else if (aiError()) { <div class="error-box" role="alert">{{ aiError() }}</div> }
+              @else if (explanation(); as answer) { <app-ai-text [text]="answer.explanation" /><p class="ai-meta">{{ answer.disclaimer }} · Modelo: {{ answer.model }}</p> }
+              @else { <p class="muted">Pide una lectura en lenguaje natural de este instante. Los números siguen siendo los del motor, la IA solo los interpreta.</p> }
+            </article>
           }
         </div>
       </div>
@@ -43,6 +50,8 @@ export class SimulationPage implements OnInit, OnDestroy {
   readonly sceneIds = signal<number[]>([]);
   readonly snapshot = signal<Snapshot | null>(null);
   readonly error = signal(''); readonly busy = signal(false);
+  readonly explanation = signal<SimulationExplanation | null>(null);
+  readonly explaining = signal(false); readonly aiError = signal('');
   readonly playing = signal(false); readonly speed = signal(60); readonly elapsed = signal(0);
   readonly sceneRoutes = computed(() => this.routes().filter(route => this.sceneIds().includes(route.id)));
   readonly duration = computed(() => Math.min(86400, Math.max(0, ...(this.snapshot()?.states.map(state => state.duration_s) ?? []))));
@@ -70,6 +79,13 @@ export class SimulationPage implements OnInit, OnDestroy {
     } catch (error) {
       if (revision === this.revision && !this.destroyed) { this.error.set(errorMessage(error)); this.playing.set(false); }
     } finally { if (revision === this.revision && !this.destroyed) this.busy.set(false); }
+  }
+  async explain() {
+    if (!this.snapshot()) return;
+    this.playing.set(false); this.explaining.set(true); this.aiError.set('');
+    try { this.explanation.set(await firstValueFrom(this.api.explainScenario(this.sceneIds(), this.elapsed()))); }
+    catch (error) { if (!this.destroyed) this.aiError.set(aiErrorMessage(error)); }
+    finally { if (!this.destroyed) this.explaining.set(false); }
   }
   ngOnDestroy() { this.destroyed = true; this.revision++; if (this.timer) clearInterval(this.timer); }
 }
