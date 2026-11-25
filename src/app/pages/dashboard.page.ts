@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { Aircraft, DashboardStats, FlightRoute } from '../core/contracts';
 import { errorMessage } from '../core/errors';
+import { formatKm } from '../core/format';
 
 @Component({
   selector: 'app-dashboard', imports: [RouterLink],
@@ -17,6 +18,13 @@ import { errorMessage } from '../core/errors';
         <a routerLink="/routes" class="stat-card"><span>PLANES DE RUTA</span><strong>{{ stats()?.route_count ?? routes().length }}</strong><small>Rutas con waypoints <b>↗</b></small></a>
         <a routerLink="/simulation" class="stat-card"><span>RUTAS ASIGNADAS</span><strong>{{ assignedCount() }}</strong><small>Con aeronave vinculada <b>↗</b></small></a>
       </div>
+      @if (stats(); as totals) {
+        <div class="stat-grid">
+          <a routerLink="/history" class="stat-card"><span>SIMULACIONES GUARDADAS</span><strong>{{ totals.simulation_run_count }}</strong><small>Instantes en el historial <b>↗</b></small></a>
+          <a routerLink="/history" class="stat-card"><span>EXPLICADAS CON IA</span><strong>{{ totals.explained_run_count }}</strong><small>Con lectura en lenguaje natural <b>↗</b></small></a>
+          <a routerLink="/routes" class="stat-card"><span>DISTANCIA PLANIFICADA</span><strong>{{ km(totals.planned_distance_km) }}</strong><small>Suma de todos tus planes <b>↗</b></small></a>
+        </div>
+      }
       <div class="dashboard-grid">
         <article class="panel"><div class="panel-heading"><h2>Planes de ruta</h2><a routerLink="/routes" class="text-button">Gestionar →</a></div>
           @for (route of routes().slice(0, 5); track route.id) {
@@ -34,6 +42,7 @@ export class DashboardPage implements OnInit {
   readonly aircraft = signal<Aircraft[]>([]);
   readonly routes = signal<FlightRoute[]>([]);
   readonly stats = signal<DashboardStats | null>(null);
+  readonly km = formatKm;
   readonly loading = signal(true);
   readonly error = signal('');
   assignedCount() {
