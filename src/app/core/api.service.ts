@@ -1,6 +1,8 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Aircraft, AircraftWrite, FlightRoute, RouteWrite, Snapshot } from './contracts';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import {
+  Aircraft, AircraftWrite, FlightRoute, RouteWrite, SimulationRun, SimulationRunCreate, SimulationRunSummary, Snapshot,
+} from './contracts';
 
 export const API_URL = new InjectionToken<string>('API_URL');
 
@@ -19,4 +21,14 @@ export class ApiService {
   preview(route_ids: number[], elapsed_s: number) {
     return this.http.post<Snapshot>(`${this.base}/simulation/preview`, { route_ids, elapsed_s });
   }
+
+  // Saved simulation runs
+  runs(offset = 0, limit = 20) {
+    const params = new HttpParams().set('offset', offset).set('limit', limit);
+    return this.http.get<SimulationRunSummary[]>(`${this.base}/simulation/runs`, { params });
+  }
+  run(id: number) { return this.http.get<SimulationRun>(`${this.base}/simulation/runs/${id}`); }
+  saveRun(data: SimulationRunCreate) { return this.http.post<SimulationRun>(`${this.base}/simulation/runs`, data); }
+  renameRun(id: number, name: string) { return this.http.patch<SimulationRun>(`${this.base}/simulation/runs/${id}`, { name }); }
+  deleteRun(id: number) { return this.http.delete<void>(`${this.base}/simulation/runs/${id}`); }
 }
