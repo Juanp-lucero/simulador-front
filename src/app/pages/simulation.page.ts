@@ -1,5 +1,6 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { FlightRoute, SimulationExplanation, Snapshot } from '../core/contracts';
@@ -52,6 +53,7 @@ import { AltitudeChart } from '../shared/altitude-chart';
 })
 export class SimulationPage implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
+  private readonly activatedRoute = inject(ActivatedRoute);
   readonly routes = signal<FlightRoute[]>([]);
   readonly selection = signal(new Set<number>());
   readonly sceneIds = signal<number[]>([]);
@@ -70,10 +72,21 @@ export class SimulationPage implements OnInit, OnDestroy {
   async ngOnInit() {
     try { this.routes.set(await firstValueFrom(this.api.routes())); }
     catch (error) { this.error.set(errorMessage(error)); }
+    await this.openFromQuery();
     this.api.aiStatus().subscribe({ next: status => this.aiConfigured.set(status.configured), error: () => this.aiConfigured.set(false) });
     this.timer = setInterval(() => {
       if (this.playing() && !this.busy()) void this.render(Math.min(this.elapsed() + this.speed(), this.duration()));
     }, 1000);
+  }
+  /** `/simulation?routes=1,2&t=30` opens a saved scenario at that instant. */
+  private async openFromQuery() {
+    const query = this.activatedRoute.snapshot.queryParamMap;
+    const available = new Set(this.routes().filter(route => route.aircraft_id).map(route => route.id));
+    const ids = (query.get('routes') ?? '').split(',').map(Number).filter(id => available.has(id));
+    if (!ids.length) return;
+    const seconds = Math.min(86400, Math.max(0, Number(query.get('t')) || 0));
+    this.selection.set(new Set(ids)); this.sceneIds.set(ids);
+    await this.render(seconds);
   }
   toggle(id: number) { const selected = new Set(this.selection()); selected.has(id) ? selected.delete(id) : selected.add(id); this.selection.set(selected); }
   async loadScenario() {
