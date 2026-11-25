@@ -39,7 +39,9 @@ describe('ApiService endpoints', () => {
     rename.flush({});
 
     api.deleteRun(3).subscribe();
-    expect(http.expectOne(`${BASE}/simulation/runs/3`).request.method).toBe('DELETE');
+    const remove = http.expectOne(`${BASE}/simulation/runs/3`);
+    expect(remove.request.method).toBe('DELETE');
+    remove.flush(null);
   });
 
   it('requests route insights and an AI review', () => {
@@ -52,5 +54,24 @@ describe('ApiService endpoints', () => {
     const review = http.expectOne(`${BASE}/ai/routes/7/review`);
     expect(review.request.method).toBe('POST');
     review.flush({});
+  });
+
+  it('asks the AI to explain a scenario or a saved run', () => {
+    api.explainScenario([1, 2], 120).subscribe();
+    const scenario = http.expectOne(`${BASE}/ai/simulation/explain`);
+    expect(scenario.request.body).toEqual({ route_ids: [1, 2], elapsed_s: 120 });
+    scenario.flush({});
+
+    api.explainRun(5).subscribe();
+    const run = http.expectOne(`${BASE}/ai/simulation/runs/5/explain`);
+    expect(run.request.method).toBe('POST');
+    run.flush({});
+  });
+
+  it('reads dashboard stats and service health', () => {
+    api.stats().subscribe();
+    http.expectOne(`${BASE}/stats`).flush({});
+    api.healthDetails().subscribe();
+    http.expectOne(`${BASE}/health/details`).flush({ status: 'ok', database: 'connected', ai_configured: true });
   });
 });
