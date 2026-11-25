@@ -40,3 +40,11 @@ export interface RouteReview {
   strengths: string[]; risks: string[]; suggestions: string[];
   insights: RouteInsights; disclaimer: string;
 }
+
+export interface AiStatus { provider: string; configured: boolean; model: string; }
+export interface SimulationExplanation { provider: string; model: string; explanation: string; disclaimer: string; }
+export interface DashboardStats {
+  aircraft_count: number; route_count: number; routes_without_aircraft: number;
+  simulation_run_count: number; explained_run_count: number; planned_distance_km: number;
+}
+export interface HealthDetails { status: string; database: string; ai_configured: boolean; }
