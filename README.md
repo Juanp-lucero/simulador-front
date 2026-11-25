@@ -17,12 +17,15 @@ Desplegado en Vercel:
 
 - Registro/login contra `/auth/register`, `/auth/login` y `/auth/me`.
 - JWT solo en memoria; se elimina al salir o recibir un `401`. No se envía a otros dominios y no se guarda en localStorage.
-- Resumen con conteos obtenidos de la API.
 - Crear, editar y eliminar aeronaves propias.
 - Crear, editar y eliminar rutas de 2–100 waypoints; asignar una aeronave propia.
 - Mapa de rutas y posiciones, telemetría y gráfica de altitudes calculadas.
 - Preview HTTP con reproducción, pausa, reinicio, velocidad de tiempo simulado y búsqueda de un instante.
 - Manejo de errores y estados vacíos; no hay registros simulados incrustados en la interfaz.
+- Historial de simulaciones: guardar un instante desde el simulador, listar con paginación, renombrar, eliminar y reabrirlo en el simulador (`/simulation?routes=1,2&t=30`).
+- Resumen con totales de `/stats`, simulaciones recientes y aviso de rutas sin aeronave.
+- Métricas de cada plan de ruta (`/routes/{id}/insights`): distancia, duración, altitudes, velocidades, margen bajo el techo y alertas.
+- Estado de la API y de la IA en la barra lateral (`/health/details`).
 
 ## Desarrollo
 
