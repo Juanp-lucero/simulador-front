@@ -6,3 +6,20 @@
 @media(max-width:1200px){.page{padding:28px 24px}.sidebar{width:215px}.resource-grid{grid-template-columns:300px 1fr}.aircraft-row{flex-wrap:wrap}.simulation-layout{grid-template-columns:220px minmax(0,1fr)}.telemetry-grid{grid-template-columns:1fr}.speed-label{margin-left:0}.playback-row{flex-wrap:wrap}.dashboard-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:850px){.app-shell{display:block}.sidebar{width:auto;height:auto;position:static;padding:18px;display:block}.sidebar .brand{font-size:1.1rem}.nav-label,.sidebar-note,.account{display:none}.sidebar nav{display:flex;gap:5px;margin-top:17px;overflow:auto}.sidebar nav a{font-size:.75rem;white-space:nowrap;padding:9px}.topbar{height:45px;padding:0 20px}.page{padding:25px 20px}.page-heading{align-items:flex-start;flex-wrap:wrap}.stat-grid{gap:10px}.stat-card{padding:14px}.stat-card strong{font-size:2rem}.stat-card>span{font-size:.5rem}.dashboard-grid,.resource-grid{grid-template-columns:1fr}.simulation-layout{grid-template-columns:1fr}.scenario-panel{margin-bottom:0}.flight-map{height:360px}.auth-layout{grid-template-columns:1fr}.auth-story{padding:30px;min-height:300px}.auth-copy{margin:35px 0}.auth-copy h1{font-size:2.5rem}.auth-copy p,.auth-grid{display:none}.auth-panel{padding:40px 24px}.academic-note{font-size:.6rem}.form-two{gap:12px}.panel{padding:18px}.sidebar{border-bottom:1px solid var(--border)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* AI assistance */
+.ai-panel{background:linear-gradient(135deg,#17283d,#121e30 70%);border-color:#2e4b66}
+.ai-panel .panel-heading{margin-bottom:14px}
+.ai-text{font-size:.82rem;line-height:1.7;color:#c9d7e8}
+.ai-text h3{font-size:.85rem;color:#e6edf7;margin:16px 0 6px}
+.ai-text h3:first-child{margin-top:0}
+.ai-text p{margin:0 0 8px}
+.ai-bullet{padding-left:16px;position:relative}
+.ai-bullet:before{content:"•";position:absolute;left:2px;color:var(--accent)}
+.source-badge{border-radius:999px;padding:4px 10px;font-size:.6rem;letter-spacing:.08em;font-weight:700}
+.source-badge.ai{background:#143337;color:#5de2ca;border:1px solid #24524f}
+.source-badge.rules{background:#2a2a1a;color:#e5cf7a;border:1px solid #5a5226}
+.ai-meta{font-size:.65rem;color:var(--muted);margin-top:12px}
+.loading-line{display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--muted)}
+.loading-line:before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid #2c4058;border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
