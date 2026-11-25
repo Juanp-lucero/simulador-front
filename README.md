@@ -13,9 +13,19 @@ Desplegado en Vercel:
 | Estado de la API | https://simulador-back.vercel.app/health | |
 | Documentación de la API | https://simulador-back.vercel.app/docs | |
 
+## Cuenta de prueba
+
+Para revisar AeroMind IA sin registrarse:
+
+| Aplicación | Correo | Contraseña |
+|---|---|---|
+| https://simulador-front.vercel.app | `profesor.demo@example.com` | `ProfeDemo2026*` |
+
+Es una cuenta de demostración creada solo para la evaluación; no contiene datos personales.
+
 ## Cómo probarlo
 
-1. Entra a https://simulador-front.vercel.app e inicia sesión con la cuenta de prueba (o crea una cuenta en **Crear cuenta**). Abajo a la izquierda debe decir **API conectada** y **Asistencia IA activa (Groq)**.
+1. Entra a https://simulador-front.vercel.app e inicia sesión con la [cuenta de prueba](#cuenta-de-prueba) (o crea una cuenta en **Crear cuenta**). Abajo a la izquierda debe decir **API conectada** y **Asistencia IA activa (Groq)**.
 2. **Aeronaves → nueva aeronave:** matrícula `HK-5001`, modelo `Cessna 172`, velocidad de crucero `60` m/s, altitud máxima `4200` m.
 3. **Planes de ruta → nuevo plan:** nombre `Bogotá — Medellín`, aeronave `HK-5001` y estos waypoints (los valores grises son solo ejemplos; hay que escribirlos):
 
