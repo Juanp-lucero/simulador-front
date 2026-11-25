@@ -26,3 +26,4 @@
 .save-run{display:flex;align-items:flex-end;gap:12px;padding:16px 18px}.save-run label{margin:0}
 .selectable{cursor:pointer;border-radius:8px;padding-left:8px;padding-right:8px}.selectable:hover{background:#16243a}.selectable.selected{background:#143337}
 .run-actions{display:flex;gap:6px;margin:-10px 0 10px}
+.metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.metric-grid>div{border:1px solid var(--border);border-radius:9px;padding:12px 14px;background:#0f1a2a}.metric-grid span{display:block;font-size:.62rem;letter-spacing:.06em;color:var(--muted)}.metric-grid strong{display:block;font-size:1.05rem;margin-top:6px}@media(max-width:850px){.metric-grid{grid-template-columns:1fr 1fr}}

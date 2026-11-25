@@ -1,8 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { Aircraft, FlightRoute, RouteWrite, WaypointWrite } from '../core/contracts';
+import { Aircraft, FlightRoute, RouteInsights, RouteWrite, WaypointWrite } from '../core/contracts';
+import { formatKm } from '../core/format';
 import { errorMessage } from '../core/errors';
 
 function waypointForm(point?: WaypointWrite) {
@@ -15,7 +17,7 @@ function waypointForm(point?: WaypointWrite) {
 }
 
 @Component({
-  selector: 'app-routes', imports: [ReactiveFormsModule],
+  selector: 'app-routes', imports: [ReactiveFormsModule, DecimalPipe],
   template: `
     <section class="page">
       <div class="page-heading"><div><div class="eyebrow">PLANIFICACIÓN</div><h1>Planes de ruta</h1><p>Waypoints ordenados para un recorrido sobre la esfera terrestre.</p></div><span class="tag">GRADOS · METROS · m/s</span></div>
@@ -35,9 +37,22 @@ function waypointForm(point?: WaypointWrite) {
       </article>
       <article class="panel"><div class="panel-heading"><h2>Tus planes</h2><span class="tag">{{ routes().length }} RUTAS</span></div>
         @for (route of routes(); track route.id) {
-          <div class="list-row"><span class="route-symbol">⌁</span><div class="grow"><strong>{{ route.name }}</strong><small>{{ route.waypoints.length }} waypoints · {{ aircraftName(route.aircraft_id) }}</small></div><button class="text-button" (click)="edit(route)">Editar</button><button class="text-button danger" [disabled]="busy()" (click)="remove(route)">Eliminar</button></div>
+          <div class="list-row"><span class="route-symbol">⌁</span><div class="grow"><strong>{{ route.name }}</strong><small>{{ route.waypoints.length }} waypoints · {{ aircraftName(route.aircraft_id) }}</small></div><button class="text-button" (click)="showInsights(route)">Métricas</button><button class="text-button" (click)="edit(route)">Editar</button><button class="text-button danger" [disabled]="busy()" (click)="remove(route)">Eliminar</button></div>
         } @empty { <div class="empty-state"><span>⌁</span><h3>Aún no hay planes</h3><p>Define la posición de salida y llegada para empezar.</p></div> }
       </article>
+      @if (insightsLoading()) { <article class="panel"><p class="loading-line">Calculando métricas del plan…</p></article> }
+      @else if (insights(); as data) {
+        <article class="panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">MÉTRICAS DEL PLAN</div><h2>{{ data.route_name }}</h2></div><button class="icon-button" aria-label="Cerrar métricas" (click)="closeInsights()">×</button></div>
+          <div class="metric-grid">
+            <div><span>Distancia</span><strong>{{ km(data.total_distance_km) }}</strong></div>
+            <div><span>Duración estimada</span><strong>{{ data.estimated_duration_min | number:'1.0-1' }} min</strong></div>
+            <div><span>Tramos</span><strong>{{ data.leg_count }}</strong></div>
+            <div><span>Altitud</span><strong>{{ data.min_altitude_m | number:'1.0-0' }}–{{ data.max_altitude_m | number:'1.0-0' }} m</strong></div>
+            <div><span>Velocidad</span><strong>{{ data.min_speed_mps | number:'1.0-1' }}–{{ data.max_speed_mps | number:'1.0-1' }} m/s</strong></div>
+            <div><span>Margen bajo el techo</span><strong>{{ data.ceiling_margin_m === null ? '—' : (data.ceiling_margin_m | number:'1.0-0') + ' m' }}</strong></div>
+          </div>
+        </article>
+      }
     </section>
   `
 })
@@ -47,6 +62,8 @@ export class RoutesPage implements OnInit {
   readonly routes = signal<FlightRoute[]>([]); readonly aircraft = signal<Aircraft[]>([]);
   readonly editingId = signal<number | null>(null); readonly busy = signal(false);
   readonly error = signal(''); readonly message = signal('');
+  readonly insights = signal<RouteInsights | null>(null); readonly insightsLoading = signal(false);
+  readonly km = formatKm;
   readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]),
     aircraft_id: this.fb.control<number | null>(null),
@@ -91,4 +108,12 @@ export class RoutesPage implements OnInit {
     catch (error) { this.error.set(errorMessage(error)); }
     finally { this.busy.set(false); }
   }
+
+  async showInsights(route: FlightRoute) {
+    this.insightsLoading.set(true); this.error.set('');
+    try { this.insights.set(await firstValueFrom(this.api.routeInsights(route.id))); }
+    catch (error) { this.error.set(errorMessage(error)); }
+    finally { this.insightsLoading.set(false); }
+  }
+  closeInsights() { this.insights.set(null); }
 }
