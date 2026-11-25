@@ -56,7 +56,7 @@ function waypointForm(point?: WaypointWrite) {
             <div class="warning-list" role="list">@for (warning of data.warnings; track warning) { <p role="listitem">⚠ {{ warning }}</p> }</div>
           } @else { <div class="success-box">Sin alertas en los chequeos automáticos.</div> }
         </article>
-        <article class="panel ai-panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">REVISIÓN DEL PLAN</div><h2>¿Es coherente este plan?</h2></div><button class="button primary" [disabled]="reviewing()" (click)="review(data.route_id)">{{ reviewResult() ? 'Revisar de nuevo' : 'Revisar con IA' }}</button></div>
+        <article class="panel ai-panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">REVISIÓN DEL PLAN</div><h2>¿Es coherente este plan?</h2></div><button class="button primary" [disabled]="reviewing()" [attr.aria-busy]="reviewing()" (click)="review(data.route_id)">{{ reviewResult() ? 'Revisar de nuevo' : 'Revisar con IA' }}</button></div>
           @if (reviewing()) { <p class="loading-line">Revisando altitudes, velocidades y tramos…</p> }
           @else if (reviewError()) { <div class="error-box" role="alert">{{ reviewError() }}</div> }
           @else if (reviewResult(); as result) {

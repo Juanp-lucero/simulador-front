@@ -40,7 +40,7 @@ export const RUNS_PAGE_SIZE = 10;
           @for (state of run.result.states; track state.aircraft_id) {
             <div class="telemetry-row"><div><strong>{{ state.registration }}</strong><small>{{ state.route_name }}</small></div><span>{{ state.altitude_m | number:'1.0-0' }} m<small>{{ state.speed_mps | number:'1.0-1' }} m/s</small></span><span>{{ state.progress * 100 | number:'1.0-0' }}%<small>{{ state.completed ? 'Completada' : 'WP ' + state.next_waypoint }}</small></span></div>
           }
-          <div class="ai-panel panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">ASISTENCIA IA</div><h2>Explicación</h2></div><button class="button primary" [disabled]="explaining()" (click)="explain(run)">{{ run.explanation ? 'Regenerar' : 'Explicar con IA' }}</button></div>
+          <div class="ai-panel panel" aria-live="polite"><div class="panel-heading"><div><div class="eyebrow">ASISTENCIA IA</div><h2>Explicación</h2></div><button class="button primary" [disabled]="explaining()" [attr.aria-busy]="explaining()" (click)="explain(run)">{{ run.explanation ? 'Regenerar' : 'Explicar con IA' }}</button></div>
             @if (explaining()) { <p class="loading-line">La IA está revisando esta simulación…</p> }
             @else if (aiError()) { <div class="error-box" role="alert">{{ aiError() }}</div> }
             @else if (run.explanation) { <app-ai-text [text]="run.explanation" /><p class="ai-meta">La explicación queda guardada con la simulación.</p> }
