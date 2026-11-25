@@ -115,25 +115,31 @@ export class RoutesPage implements OnInit {
     try {
       const id = this.editingId();
       await firstValueFrom(id ? this.api.updateRoute(id, payload) : this.api.createRoute(payload));
-      this.reset(); this.message.set('Plan de ruta guardado.'); await this.load();
+      this.reset(); this.closeInsights(); this.message.set('Plan de ruta guardado.'); await this.load();
     } catch (error) { this.error.set(errorMessage(error)); }
     finally { this.busy.set(false); }
   }
   async remove(route: FlightRoute) {
     if (!confirm(`¿Eliminar el plan "${route.name}" y sus waypoints?`)) return;
     this.busy.set(true); this.error.set('');
-    try { await firstValueFrom(this.api.deleteRoute(route.id)); if (this.editingId() === route.id) this.reset(); await this.load(); }
+    try {
+      await firstValueFrom(this.api.deleteRoute(route.id));
+      if (this.editingId() === route.id) this.reset();
+      if (this.insights()?.route_id === route.id) this.closeInsights();
+      await this.load();
+    }
     catch (error) { this.error.set(errorMessage(error)); }
     finally { this.busy.set(false); }
   }
 
   async showInsights(route: FlightRoute) {
     this.insightsLoading.set(true); this.error.set('');
+    this.reviewResult.set(null); this.reviewError.set('');
     try { this.insights.set(await firstValueFrom(this.api.routeInsights(route.id))); }
     catch (error) { this.error.set(errorMessage(error)); }
     finally { this.insightsLoading.set(false); }
   }
-  closeInsights() { this.insights.set(null); }
+  closeInsights() { this.insights.set(null); this.reviewResult.set(null); this.reviewError.set(''); }
 
   async review(routeId: number) {
     this.reviewing.set(true); this.reviewError.set('');
