@@ -66,6 +66,7 @@ function waypointForm(point?: WaypointWrite) {
             @if (result.risks.length) { <h3 class="review-title">Riesgos</h3>@for (item of result.risks; track item) { <p class="ai-bullet">{{ item }}</p> } }
             @if (result.suggestions.length) { <h3 class="review-title">Sugerencias</h3>@for (item of result.suggestions; track item) { <p class="ai-bullet">{{ item }}</p> } }
             <p class="ai-meta">{{ result.disclaimer }}</p>
+            @if (result.source === 'rules') { <p class="ai-meta">La IA no estaba disponible: esta revisión salió de los chequeos automáticos.</p> }
           } @else { <p class="muted">La IA lee las métricas calculadas y señala fortalezas, riesgos y mejoras del plan.</p> }
         </article>
       }
