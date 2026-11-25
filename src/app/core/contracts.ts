@@ -17,3 +17,11 @@ export interface AircraftState {
   heading_deg: number; next_waypoint: number | null; progress: number; duration_s: number; completed: boolean;
 }
 export interface Snapshot { elapsed_s: number; states: AircraftState[]; }
+
+/** Saved simulation scenario as listed by `GET /simulation/runs`. */
+export interface SimulationRunSummary {
+  id: number; name: string; route_ids: number[]; elapsed_s: number; has_explanation: boolean; created_at: string;
+}
+/** Saved scenario with its deterministic result and optional AI explanation. */
+export interface SimulationRun extends SimulationRunSummary { result: Snapshot; explanation: string | null; }
+export interface SimulationRunCreate { name: string; route_ids: number[]; elapsed_s: number; }
