@@ -10,6 +10,7 @@ import { AuthPage } from './pages/auth.page';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, AuthPage],
   template: `
     @if (auth.user(); as user) {
+      <a class="skip-link" href="#contenido">Saltar al contenido</a>
       <div class="app-shell">
         <aside class="sidebar">
           <a routerLink="/" class="brand"><span class="brand-icon">A</span><span>AeroMind <b>IA</b><small>FLIGHT SIMULATION</small></span></a>
@@ -27,7 +28,7 @@ import { AuthPage } from './pages/auth.page';
           </div>
           <div class="account"><span class="avatar">{{ user.username.slice(0, 2).toUpperCase() }}</span><div>{{ user.username }}<small>{{ user.email }}</small></div><button class="icon-button" aria-label="Cerrar sesión" title="Cerrar sesión" (click)="auth.logout()">↪</button></div>
         </aside>
-        <main class="workspace">
+        <main class="workspace" id="contenido" tabindex="-1">
           <header class="topbar"><span>OPERATIONS / AEROMIND</span><div class="flex gap-3 items-center"><span class="environment-tag">ENTORNO ACADÉMICO</span><button class="text-button" (click)="auth.logout()">Salir</button></div></header>
           <router-outlet />
         </main>
