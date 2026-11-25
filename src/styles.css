@@ -23,3 +23,4 @@
 .loading-line{display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--muted)}
 .loading-line:before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid #2c4058;border-top-color:var(--accent);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.save-run{display:flex;align-items:flex-end;gap:12px;padding:16px 18px}.save-run label{margin:0}

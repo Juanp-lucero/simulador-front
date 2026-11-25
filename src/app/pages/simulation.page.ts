@@ -24,6 +24,13 @@ import { AltitudeChart } from '../shared/altitude-chart';
         </article>
         <div class="simulation-main">
           <article class="map-card"><div class="map-title"><span class="status-dot"></span> Vista geográfica <span class="tag">{{ snapshot()?.states?.length ?? 0 }} AERONAVES</span></div><app-flight-map [routes]="sceneRoutes()" [states]="snapshot()?.states ?? []" /></article>
+          @if (snapshot()) {
+            <form class="panel save-run" (submit)="$event.preventDefault(); saveRun()">
+              <label class="grow">Guardar este instante en el historial<input name="runName" maxlength="100" placeholder="Ej.: Bogotá — Medellín a los 30 min" [value]="runName()" (input)="runName.set($any($event.target).value)"></label>
+              <button class="button secondary" type="submit" [disabled]="saving() || !runName().trim()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button>
+            </form>
+            @if (saved()) { <div class="success-box" role="status">{{ saved() }}</div> }
+          }
           <article class="panel playback-panel"><div class="playback-row"><button class="button primary" [disabled]="!snapshot()" (click)="playing.set(!playing())">{{ playing() ? 'Ⅱ Pausar' : '▶ Reproducir' }}</button><button class="button secondary" [disabled]="!snapshot() || busy()" (click)="seek(0)">↺ Reiniciar</button><label class="speed-label">Velocidad<select [value]="speed()" (change)="speed.set(+$any($event.target).value)"><option value="1">1×</option><option value="10">10×</option><option value="60">60×</option><option value="300">300×</option></select></label><span class="clock">{{ elapsed() | number:'1.0-0' }} <small>/ {{ duration() | number:'1.0-0' }} s</small></span></div>
             <input class="timeline" type="range" aria-label="Tiempo simulado en segundos" min="0" [max]="duration() || 1" [value]="elapsed()" [disabled]="!snapshot() || busy()" (change)="seek(+$any($event.target).value)">
           </article>
@@ -52,6 +59,7 @@ export class SimulationPage implements OnInit, OnDestroy {
   readonly error = signal(''); readonly busy = signal(false);
   readonly explanation = signal<SimulationExplanation | null>(null);
   readonly explaining = signal(false); readonly aiError = signal('');
+  readonly runName = signal(''); readonly saving = signal(false); readonly saved = signal('');
   readonly playing = signal(false); readonly speed = signal(60); readonly elapsed = signal(0);
   readonly sceneRoutes = computed(() => this.routes().filter(route => this.sceneIds().includes(route.id)));
   readonly duration = computed(() => Math.min(86400, Math.max(0, ...(this.snapshot()?.states.map(state => state.duration_s) ?? []))));
@@ -83,6 +91,16 @@ export class SimulationPage implements OnInit, OnDestroy {
     } catch (error) {
       if (revision === this.revision && !this.destroyed) { this.error.set(errorMessage(error)); this.playing.set(false); }
     } finally { if (revision === this.revision && !this.destroyed) this.busy.set(false); }
+  }
+  async saveRun() {
+    const name = this.runName().trim();
+    if (!name || !this.snapshot()) return;
+    this.saving.set(true); this.saved.set(''); this.error.set('');
+    try {
+      await firstValueFrom(this.api.saveRun({ name, route_ids: this.sceneIds(), elapsed_s: this.elapsed() }));
+      this.saved.set(`"${name}" quedó guardado en el historial.`); this.runName.set('');
+    } catch (error) { this.error.set(errorMessage(error)); }
+    finally { this.saving.set(false); }
   }
   async explain() {
     if (!this.snapshot()) return;
