@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { SimulationRun, SimulationRunSummary } from '../core/contracts';
@@ -10,7 +11,7 @@ import { formatDate, formatDuration } from '../core/format';
 export const RUNS_PAGE_SIZE = 10;
 
 @Component({
-  selector: 'app-history', imports: [DecimalPipe, AiText],
+  selector: 'app-history', imports: [DecimalPipe, AiText, RouterLink],
   template: `
     <section class="page">
       <div class="page-heading"><div><div class="eyebrow">REGISTRO</div><h1>Historial de simulaciones</h1><p>Instantes guardados desde el simulador, con su resultado calculado.</p></div><span class="tag">{{ runs().length }} EN ESTA PÁGINA</span></div>
@@ -32,6 +33,7 @@ export const RUNS_PAGE_SIZE = 10;
         @else if (selected(); as run) {
           <div class="panel-heading"><div><div class="eyebrow">DETALLE</div><h2>{{ run.name }}</h2></div><span class="tag">{{ duration(run.elapsed_s) }}</span></div>
           <div class="run-actions">
+            <a class="text-button" routerLink="/simulation" [queryParams]="{ routes: run.route_ids.join(','), t: run.elapsed_s }">Abrir en el simulador</a>
             <button class="text-button" (click)="rename(run)">Renombrar</button>
             <button class="text-button danger" (click)="remove(run)">Eliminar</button>
           </div>
