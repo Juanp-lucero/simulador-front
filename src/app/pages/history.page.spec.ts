@@ -75,4 +75,28 @@ describe('HistoryPage', () => {
     await explaining;
     expect(page.aiError()).toContain('no está configurada');
   });
+
+  it('renames and deletes a run', async () => {
+    const fixture = await render([summary(4)]);
+    const page = fixture.componentInstance;
+    const run: SimulationRun = { ...summary(4), result: { elapsed_s: 60, states: [] }, explanation: null };
+    page.selected.set(run);
+
+    vi.spyOn(window, 'prompt').mockReturnValue('  Vuelo final ');
+    const renaming = page.rename(run);
+    const rename = http.expectOne(`${BASE}/simulation/runs/4`);
+    expect(rename.request.body).toEqual({ name: 'Vuelo final' });
+    rename.flush({ ...run, name: 'Vuelo final' });
+    await renaming;
+    expect(page.runs()[0].name).toBe('Vuelo final');
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const removing = page.remove(run);
+    http.expectOne(r => r.method === 'DELETE').flush(null);
+    await tick();
+    http.expectOne(r => r.url === `${BASE}/simulation/runs`).flush([]);
+    await removing;
+    expect(page.selected()).toBeNull();
+    expect(page.runs()).toEqual([]);
+  });
 });
