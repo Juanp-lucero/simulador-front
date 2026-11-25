@@ -63,6 +63,8 @@ npm test
 npm run build
 ```
 
+Las pruebas unitarias (Vitest + jsdom) cubren los contratos de la API, los mensajes de error, los formateadores, el texto de la IA y las páginas de resumen, simulador, planes de ruta e historial con `HttpTestingController`; no llaman a la API real ni a Groq.
+
 En entornos con poca memoria:
 
 ```bash
