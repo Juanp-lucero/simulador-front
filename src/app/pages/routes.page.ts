@@ -51,6 +51,9 @@ function waypointForm(point?: WaypointWrite) {
             <div><span>Velocidad</span><strong>{{ data.min_speed_mps | number:'1.0-1' }}–{{ data.max_speed_mps | number:'1.0-1' }} m/s</strong></div>
             <div><span>Margen bajo el techo</span><strong>{{ data.ceiling_margin_m === null ? '—' : (data.ceiling_margin_m | number:'1.0-0') + ' m' }}</strong></div>
           </div>
+          @if (data.warnings.length) {
+            <div class="warning-list" role="list">@for (warning of data.warnings; track warning) { <p role="listitem">⚠ {{ warning }}</p> }</div>
+          } @else { <div class="success-box">Sin alertas en los chequeos automáticos.</div> }
         </article>
       }
     </section>
