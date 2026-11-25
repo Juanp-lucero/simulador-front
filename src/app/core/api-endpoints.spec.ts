@@ -41,4 +41,16 @@ describe('ApiService endpoints', () => {
     api.deleteRun(3).subscribe();
     expect(http.expectOne(`${BASE}/simulation/runs/3`).request.method).toBe('DELETE');
   });
+
+  it('requests route insights and an AI review', () => {
+    api.routeInsights(7).subscribe();
+    const insights = http.expectOne(`${BASE}/routes/7/insights`);
+    expect(insights.request.method).toBe('GET');
+    insights.flush({});
+
+    api.reviewRoute(7).subscribe();
+    const review = http.expectOne(`${BASE}/ai/routes/7/review`);
+    expect(review.request.method).toBe('POST');
+    review.flush({});
+  });
 });
