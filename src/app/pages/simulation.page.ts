@@ -12,7 +12,7 @@ import { AltitudeChart } from '../shared/altitude-chart';
   selector: 'app-simulation', imports: [FlightMap, AltitudeChart, DecimalPipe, AiText],
   template: `
     <section class="page">
-      <div class="page-heading"><div><div class="eyebrow">REPRODUCCIÓN DETERMINÍSTICA</div><h1>Simulador</h1><p>Selecciona rutas y explora sus posiciones calculadas por la API.</p></div><span class="tag">PREVIEW HTTP · SIN IA</span></div>
+      <div class="page-heading"><div><div class="eyebrow">REPRODUCCIÓN DETERMINÍSTICA</div><h1>Simulador</h1><p>Selecciona rutas y explora sus posiciones calculadas por la API.</p></div><span class="tag">{{ aiConfigured() ? 'MOTOR + ASISTENCIA IA' : 'MOTOR DETERMINÍSTICO · IA NO CONFIGURADA' }}</span></div>
       @if (error()) { <div class="error-box" role="alert">{{ error() }}</div> }
       <div class="simulation-layout">
         <article class="panel scenario-panel"><div class="panel-heading"><h2>Escenario</h2><span>◎</span></div><p class="field-hint">Selecciona hasta 25 rutas asignadas. Una aeronave no puede ocupar dos planes al mismo tiempo.</p>
@@ -59,6 +59,7 @@ export class SimulationPage implements OnInit, OnDestroy {
   readonly error = signal(''); readonly busy = signal(false);
   readonly explanation = signal<SimulationExplanation | null>(null);
   readonly explaining = signal(false); readonly aiError = signal('');
+  readonly aiConfigured = signal(false);
   readonly runName = signal(''); readonly saving = signal(false); readonly saved = signal('');
   readonly playing = signal(false); readonly speed = signal(60); readonly elapsed = signal(0);
   readonly sceneRoutes = computed(() => this.routes().filter(route => this.sceneIds().includes(route.id)));
@@ -69,6 +70,7 @@ export class SimulationPage implements OnInit, OnDestroy {
   async ngOnInit() {
     try { this.routes.set(await firstValueFrom(this.api.routes())); }
     catch (error) { this.error.set(errorMessage(error)); }
+    this.api.aiStatus().subscribe({ next: status => this.aiConfigured.set(status.configured), error: () => this.aiConfigured.set(false) });
     this.timer = setInterval(() => {
       if (this.playing() && !this.busy()) void this.render(Math.min(this.elapsed() + this.speed(), this.duration()));
     }, 1000);
