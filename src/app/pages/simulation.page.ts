@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { FlightRoute, SimulationExplanation, Snapshot } from '../core/contracts';
@@ -10,7 +10,7 @@ import { FlightMap } from '../shared/flight-map';
 import { AltitudeChart } from '../shared/altitude-chart';
 
 @Component({
-  selector: 'app-simulation', imports: [FlightMap, AltitudeChart, DecimalPipe, AiText],
+  selector: 'app-simulation', imports: [FlightMap, AltitudeChart, DecimalPipe, AiText, RouterLink],
   template: `
     <section class="page">
       <div class="page-heading"><div><div class="eyebrow">REPRODUCCIÓN DETERMINÍSTICA</div><h1>Simulador</h1><p>Selecciona rutas y explora sus posiciones calculadas por la API.</p></div><span class="tag">{{ aiConfigured() ? 'MOTOR + ASISTENCIA IA' : 'MOTOR DETERMINÍSTICO · IA NO CONFIGURADA' }}</span></div>
@@ -30,7 +30,7 @@ import { AltitudeChart } from '../shared/altitude-chart';
               <label class="grow">Guardar este instante en el historial<input name="runName" maxlength="100" placeholder="Ej.: Bogotá — Medellín a los 30 min" [value]="runName()" (input)="runName.set($any($event.target).value)"></label>
               <button class="button secondary" type="submit" [disabled]="saving() || !runName().trim()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button>
             </form>
-            @if (saved()) { <div class="success-box" role="status">{{ saved() }}</div> }
+            @if (saved()) { <div class="success-box" role="status">{{ saved() }} <a routerLink="/history" class="text-button">Ver historial →</a></div> }
           }
           <article class="panel playback-panel"><div class="playback-row"><button class="button primary" [disabled]="!snapshot()" (click)="playing.set(!playing())">{{ playing() ? 'Ⅱ Pausar' : '▶ Reproducir' }}</button><button class="button secondary" [disabled]="!snapshot() || busy()" (click)="seek(0)">↺ Reiniciar</button><label class="speed-label">Velocidad<select [value]="speed()" (change)="speed.set(+$any($event.target).value)"><option value="1">1×</option><option value="10">10×</option><option value="60">60×</option><option value="300">300×</option></select></label><span class="clock">{{ elapsed() | number:'1.0-0' }} <small>/ {{ duration() | number:'1.0-0' }} s</small></span></div>
             <input class="timeline" type="range" aria-label="Tiempo simulado en segundos" min="0" [max]="duration() || 1" [value]="elapsed()" [disabled]="!snapshot() || busy()" (change)="seek(+$any($event.target).value)">
