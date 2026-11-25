@@ -31,3 +31,4 @@
 .review-title{font-size:.78rem;margin:14px 0 6px;color:#e6edf7}
 .notice{margin:0 0 22px;border-color:#5a5226;background:#26240f;color:#e5cf7a}
 .recent-runs{margin-top:22px}
+.status-dot.offline{background:#e5cf7a;box-shadow:0 0 0 4px #e5cf7a22}

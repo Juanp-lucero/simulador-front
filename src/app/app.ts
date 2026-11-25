@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ApiService } from './core/api.service';
 import { AuthService } from './core/auth.service';
+import { HealthDetails } from './core/contracts';
 import { AuthPage } from './pages/auth.page';
 
 @Component({
@@ -19,7 +21,10 @@ import { AuthPage } from './pages/auth.page';
             <a routerLink="/simulation" routerLinkActive="active"><span>◎</span> Simulador</a>
             <a routerLink="/history" routerLinkActive="active"><span>◷</span> Historial</a>
           </nav>
-          <div class="sidebar-note"><span class="status-dot"></span> Motor determinístico<small>Simulación geométrica académica.<br>No usar para operaciones reales.</small></div>
+          <div class="sidebar-note" role="status">
+            <span class="status-dot" [class.offline]="health()?.database !== 'connected'"></span> {{ health()?.database === 'connected' ? 'API conectada' : 'Verificando API…' }}
+            <small>{{ health()?.ai_configured ? 'Asistencia IA activa (Groq).' : 'Asistencia IA no configurada.' }}<br>Simulación geométrica académica.<br>No usar para operaciones reales.</small>
+          </div>
           <div class="account"><span class="avatar">{{ user.username.slice(0, 2).toUpperCase() }}</span><div>{{ user.username }}<small>{{ user.email }}</small></div><button class="icon-button" aria-label="Cerrar sesión" title="Cerrar sesión" (click)="auth.logout()">↪</button></div>
         </aside>
         <main class="workspace">
@@ -34,4 +39,17 @@ import { AuthPage } from './pages/auth.page';
 })
 export class App {
   readonly auth = inject(AuthService);
+  private readonly api = inject(ApiService);
+  readonly health = signal<HealthDetails | null>(null);
+
+  constructor() {
+    // Check the backend once the user is signed in.
+    effect(() => {
+      if (!this.auth.user()) return;
+      this.api.healthDetails().subscribe({
+        next: health => this.health.set(health),
+        error: () => this.health.set({ status: 'error', database: 'unreachable', ai_configured: false }),
+      });
+    });
+  }
 }
