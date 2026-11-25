@@ -31,6 +31,9 @@ export const RUNS_PAGE_SIZE = 10;
         @if (detailLoading()) { <p class="loading-line">Cargando simulación…</p> }
         @else if (selected(); as run) {
           <div class="panel-heading"><div><div class="eyebrow">DETALLE</div><h2>{{ run.name }}</h2></div><span class="tag">{{ duration(run.elapsed_s) }}</span></div>
+          <div class="run-actions">
+            <button class="text-button" (click)="rename(run)">Renombrar</button>
+          </div>
           @for (state of run.result.states; track state.aircraft_id) {
             <div class="telemetry-row"><div><strong>{{ state.registration }}</strong><small>{{ state.route_name }}</small></div><span>{{ state.altitude_m | number:'1.0-0' }} m<small>{{ state.speed_mps | number:'1.0-1' }} m/s</small></span><span>{{ state.progress * 100 | number:'1.0-0' }}%<small>{{ state.completed ? 'Completada' : 'WP ' + state.next_waypoint }}</small></span></div>
           }
@@ -86,5 +89,15 @@ export class HistoryPage implements OnInit {
       this.runs.update(runs => runs.map(item => item.id === run.id ? { ...item, has_explanation: true } : item));
     } catch (error) { this.aiError.set(aiErrorMessage(error)); }
     finally { this.explaining.set(false); }
+  }
+
+  async rename(run: SimulationRun) {
+    const name = prompt('Nuevo nombre de la simulación', run.name)?.trim();
+    if (!name || name === run.name) return;
+    try {
+      const updated = await firstValueFrom(this.api.renameRun(run.id, name));
+      this.selected.set(updated);
+      this.runs.update(runs => runs.map(item => item.id === run.id ? { ...item, name: updated.name } : item));
+    } catch (error) { this.error.set(errorMessage(error)); }
   }
 }

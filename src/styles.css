@@ -25,3 +25,4 @@
 @keyframes spin{to{transform:rotate(360deg)}}
 .save-run{display:flex;align-items:flex-end;gap:12px;padding:16px 18px}.save-run label{margin:0}
 .selectable{cursor:pointer;border-radius:8px;padding-left:8px;padding-right:8px}.selectable:hover{background:#16243a}.selectable.selected{background:#143337}
+.run-actions{display:flex;gap:6px;margin:-10px 0 10px}
