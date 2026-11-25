@@ -13,3 +13,12 @@ export function errorMessage(error: unknown): string {
   }
   return `La API respondió con un error (${error.status}).`;
 }
+
+/** Message for AI endpoints: 503 means no key, 502 means the provider failed. */
+export function aiErrorMessage(error: unknown): string {
+  if (error instanceof HttpErrorResponse) {
+    if (error.status === 503) return 'La asistencia IA no está configurada en el servidor.';
+    if (error.status === 502) return 'El servicio de IA no respondió. Intenta de nuevo en unos segundos.';
+  }
+  return errorMessage(error);
+}
