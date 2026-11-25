@@ -33,6 +33,7 @@ export const RUNS_PAGE_SIZE = 10;
           <div class="panel-heading"><div><div class="eyebrow">DETALLE</div><h2>{{ run.name }}</h2></div><span class="tag">{{ duration(run.elapsed_s) }}</span></div>
           <div class="run-actions">
             <button class="text-button" (click)="rename(run)">Renombrar</button>
+            <button class="text-button danger" (click)="remove(run)">Eliminar</button>
           </div>
           @for (state of run.result.states; track state.aircraft_id) {
             <div class="telemetry-row"><div><strong>{{ state.registration }}</strong><small>{{ state.route_name }}</small></div><span>{{ state.altitude_m | number:'1.0-0' }} m<small>{{ state.speed_mps | number:'1.0-1' }} m/s</small></span><span>{{ state.progress * 100 | number:'1.0-0' }}%<small>{{ state.completed ? 'Completada' : 'WP ' + state.next_waypoint }}</small></span></div>
@@ -98,6 +99,15 @@ export class HistoryPage implements OnInit {
       const updated = await firstValueFrom(this.api.renameRun(run.id, name));
       this.selected.set(updated);
       this.runs.update(runs => runs.map(item => item.id === run.id ? { ...item, name: updated.name } : item));
+    } catch (error) { this.error.set(errorMessage(error)); }
+  }
+
+  async remove(run: SimulationRun) {
+    if (!confirm(`¿Eliminar "${run.name}" del historial? También se borra su explicación.`)) return;
+    try {
+      await firstValueFrom(this.api.deleteRun(run.id));
+      this.selected.set(null);
+      await this.go(this.runs().length === 1 && this.page() > 0 ? this.page() - 1 : this.page());
     } catch (error) { this.error.set(errorMessage(error)); }
   }
 }
