@@ -2,9 +2,9 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { Aircraft, DashboardStats, FlightRoute } from '../core/contracts';
+import { Aircraft, DashboardStats, FlightRoute, SimulationRunSummary } from '../core/contracts';
 import { errorMessage } from '../core/errors';
-import { formatKm } from '../core/format';
+import { formatDate, formatKm } from '../core/format';
 
 @Component({
   selector: 'app-dashboard', imports: [RouterLink],
@@ -36,6 +36,11 @@ import { formatKm } from '../core/format';
         </article>
         <article class="panel guide-panel"><div class="eyebrow">CÓMO FUNCIONA</div><h2>De un plan<br>a una trayectoria.</h2><div class="guide-step"><b>01</b><div>Registra una aeronave<small>Define velocidad de crucero y límite de altitud.</small></div></div><div class="guide-step"><b>02</b><div>Traza y asigna una ruta<small>Ordena coordenadas, altitudes y velocidades.</small></div></div><div class="guide-step"><b>03</b><div>Reproduce el escenario<small>Avanza el tiempo o busca un instante exacto.</small></div></div><div class="info-box">Modelo geométrico: sin viento, aceleración ni límites de ascenso. No representa operaciones reales.</div></article>
       </div>
+      <article class="panel recent-runs"><div class="panel-heading"><h2>Simulaciones recientes</h2><a routerLink="/history" class="text-button">Ver historial →</a></div>
+        @for (run of recentRuns(); track run.id) {
+          <div class="list-row"><span class="route-symbol">◷</span><div><strong>{{ run.name }}</strong><small>{{ date(run.created_at) }}</small></div>@if (run.has_explanation) { <span class="source-badge ai">CON IA</span> }</div>
+        } @empty { <p class="muted">Guarda un instante desde el simulador para verlo aquí.</p> }
+      </article>
       @if (aircraft().length === 100 || routes().length === 100) { <p class="muted">Esta vista muestra hasta 100 recursos por módulo.</p> }
     </section>
   `
@@ -46,6 +51,8 @@ export class DashboardPage implements OnInit {
   readonly routes = signal<FlightRoute[]>([]);
   readonly stats = signal<DashboardStats | null>(null);
   readonly km = formatKm;
+  readonly date = formatDate;
+  readonly recentRuns = signal<SimulationRunSummary[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
   assignedCount() {
@@ -57,6 +64,7 @@ export class DashboardPage implements OnInit {
       const [aircraft, routes] = await Promise.all([firstValueFrom(this.api.aircraft()), firstValueFrom(this.api.routes())]);
       this.aircraft.set(aircraft); this.routes.set(routes);
       // Totals come from /stats so they are not limited to the first 100 items.
+      this.api.runs(0, 3).subscribe({ next: runs => this.recentRuns.set(runs), error: () => this.recentRuns.set([]) });
       this.api.stats().subscribe({ next: stats => this.stats.set(stats), error: () => this.stats.set(null) });
     } catch (error) { this.error.set(errorMessage(error)); }
     finally { this.loading.set(false); }
