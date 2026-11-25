@@ -27,6 +27,20 @@ Desplegado en Vercel:
 - Métricas de cada plan de ruta (`/routes/{id}/insights`): distancia, duración, altitudes, velocidades, margen bajo el techo y alertas.
 - Estado de la API y de la IA en la barra lateral (`/health/details`).
 
+## Asistencia IA
+
+La IA (Groq, en el backend) interpreta resultados; nunca cambia los cálculos del motor.
+
+| Dónde | Qué hace | Endpoint |
+|---|---|---|
+| Simulador | "Explicar con IA" el instante actual | `POST /ai/simulation/explain` |
+| Historial | Explicar una simulación guardada; la explicación se guarda con ella | `POST /ai/simulation/runs/{id}/explain` |
+| Planes de ruta | "Revisar con IA": resumen, fortalezas, riesgos y sugerencias | `POST /ai/routes/{id}/review` |
+
+- Si el servidor no tiene `GROQ_API_KEY`, la interfaz lo indica (`503`) y todo lo demás sigue funcionando.
+- La revisión de rutas nunca falla por la IA: sin proveedor, el backend responde con una revisión por reglas y la interfaz la marca como **REGLAS**.
+- Las respuestas se muestran como texto (títulos, viñetas y párrafos), nunca como HTML.
+
 ## Desarrollo
 
 Requiere Node 22.18+ o Node 24+ y npm. Desde este repositorio:
