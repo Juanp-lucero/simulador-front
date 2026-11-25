@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { Aircraft, FlightRoute } from '../core/contracts';
+import { Aircraft, DashboardStats, FlightRoute } from '../core/contracts';
 import { errorMessage } from '../core/errors';
 
 @Component({
@@ -13,8 +13,8 @@ import { errorMessage } from '../core/errors';
       @if (error()) { <div class="error-box" role="alert">{{ error() }}</div> }
       @if (loading()) { <p class="muted">Cargando recursos desde la API…</p> }
       <div class="stat-grid">
-        <a routerLink="/aircraft" class="stat-card"><span>AERONAVES REGISTRADAS</span><strong>{{ aircraft().length }}</strong><small>Tu flota disponible <b>↗</b></small></a>
-        <a routerLink="/routes" class="stat-card"><span>PLANES DE RUTA</span><strong>{{ routes().length }}</strong><small>Rutas con waypoints <b>↗</b></small></a>
+        <a routerLink="/aircraft" class="stat-card"><span>AERONAVES REGISTRADAS</span><strong>{{ stats()?.aircraft_count ?? aircraft().length }}</strong><small>Tu flota disponible <b>↗</b></small></a>
+        <a routerLink="/routes" class="stat-card"><span>PLANES DE RUTA</span><strong>{{ stats()?.route_count ?? routes().length }}</strong><small>Rutas con waypoints <b>↗</b></small></a>
         <a routerLink="/simulation" class="stat-card"><span>RUTAS ASIGNADAS</span><strong>{{ assignedCount() }}</strong><small>Con aeronave vinculada <b>↗</b></small></a>
       </div>
       <div class="dashboard-grid">
@@ -33,13 +33,19 @@ export class DashboardPage implements OnInit {
   private readonly api = inject(ApiService);
   readonly aircraft = signal<Aircraft[]>([]);
   readonly routes = signal<FlightRoute[]>([]);
+  readonly stats = signal<DashboardStats | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
-  assignedCount() { return this.routes().filter(route => route.aircraft_id !== null).length; }
+  assignedCount() {
+    const stats = this.stats();
+    return stats ? stats.route_count - stats.routes_without_aircraft : this.routes().filter(route => route.aircraft_id !== null).length;
+  }
   async ngOnInit() {
     try {
       const [aircraft, routes] = await Promise.all([firstValueFrom(this.api.aircraft()), firstValueFrom(this.api.routes())]);
       this.aircraft.set(aircraft); this.routes.set(routes);
+      // Totals come from /stats so they are not limited to the first 100 items.
+      this.api.stats().subscribe({ next: stats => this.stats.set(stats), error: () => this.stats.set(null) });
     } catch (error) { this.error.set(errorMessage(error)); }
     finally { this.loading.set(false); }
   }
