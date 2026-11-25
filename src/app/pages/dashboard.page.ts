@@ -18,6 +18,9 @@ import { formatKm } from '../core/format';
         <a routerLink="/routes" class="stat-card"><span>PLANES DE RUTA</span><strong>{{ stats()?.route_count ?? routes().length }}</strong><small>Rutas con waypoints <b>↗</b></small></a>
         <a routerLink="/simulation" class="stat-card"><span>RUTAS ASIGNADAS</span><strong>{{ assignedCount() }}</strong><small>Con aeronave vinculada <b>↗</b></small></a>
       </div>
+      @if (stats()?.routes_without_aircraft; as pending) {
+        <div class="info-box notice" role="status">{{ pending }} plan(es) de ruta no tienen aeronave asignada y no se pueden simular. <a routerLink="/routes" class="text-button">Asignar ahora →</a></div>
+      }
       @if (stats(); as totals) {
         <div class="stat-grid">
           <a routerLink="/history" class="stat-card"><span>SIMULACIONES GUARDADAS</span><strong>{{ totals.simulation_run_count }}</strong><small>Instantes en el historial <b>↗</b></small></a>
