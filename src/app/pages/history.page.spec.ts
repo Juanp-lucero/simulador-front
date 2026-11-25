@@ -46,4 +46,33 @@ describe('HistoryPage', () => {
     const fixture = await render([]);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Aún no hay simulaciones guardadas');
   });
+
+  it('explains a saved run and marks it as explained', async () => {
+    const fixture = await render([summary(4)]);
+    const page = fixture.componentInstance;
+    const run: SimulationRun = { ...summary(4), result: { elapsed_s: 60, states: [] }, explanation: null };
+
+    const opening = page.open(4);
+    http.expectOne(`${BASE}/simulation/runs/4`).flush(run);
+    await opening;
+
+    const explaining = page.explain(run);
+    http.expectOne(`${BASE}/ai/simulation/runs/4/explain`).flush({ provider: 'groq', model: 'm', explanation: '## Resumen\nTodo bien', disclaimer: 'd' });
+    await explaining;
+    fixture.detectChanges();
+
+    expect(page.selected()?.explanation).toContain('Todo bien');
+    expect(page.runs()[0].has_explanation).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.ai-text h3')?.textContent).toBe('Resumen');
+  });
+
+  it('shows a friendly message when the AI is not configured', async () => {
+    const fixture = await render([summary(4)]);
+    const page = fixture.componentInstance;
+    const run: SimulationRun = { ...summary(4), result: { elapsed_s: 60, states: [] }, explanation: null };
+    const explaining = page.explain(run);
+    http.expectOne(`${BASE}/ai/simulation/runs/4/explain`).flush({ detail: 'x' }, { status: 503, statusText: 'Unavailable' });
+    await explaining;
+    expect(page.aiError()).toContain('no está configurada');
+  });
 });
