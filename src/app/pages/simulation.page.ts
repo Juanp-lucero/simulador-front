@@ -66,7 +66,11 @@ export class SimulationPage implements OnInit, OnDestroy {
     }, 1000);
   }
   toggle(id: number) { const selected = new Set(this.selection()); selected.has(id) ? selected.delete(id) : selected.add(id); this.selection.set(selected); }
-  async loadScenario() { this.playing.set(false); this.sceneIds.set([...this.selection()]); await this.render(0); }
+  async loadScenario() {
+    this.playing.set(false); this.sceneIds.set([...this.selection()]);
+    this.explanation.set(null); this.aiError.set('');
+    await this.render(0);
+  }
   async seek(seconds: number) { this.playing.set(false); await this.render(seconds); }
   private async render(seconds: number) {
     const revision = ++this.revision;
